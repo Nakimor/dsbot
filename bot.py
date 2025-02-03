@@ -1,11 +1,7 @@
+import os
 import discord
 from discord.ext import commands, tasks
 import asyncio
-import os
-from dotenv import load_dotenv
-
-# Загрузка переменных окружения из файла .env
-load_dotenv()
 
 # Настройка интентов
 intents = discord.Intents.default()
