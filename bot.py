@@ -30,7 +30,7 @@ async def on_ready():
     await bot.change_presence(
         activity=discord.Activity(
             type=discord.ActivityType.watching,  # Тип активности (например, "Watching")
-            name="за мутами участников"         # Текст активности
+            name="за мутом"         # Текст активности
         ),
         status=discord.Status.online           # Статус (online, idle, dnd, offline)
     )
