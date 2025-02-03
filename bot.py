@@ -13,37 +13,41 @@ intents.voice_states = True     # Для работы с голосовыми с
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 # ID каналов
-CHANNEL_ID_1 = 800030268911255553  # Замените на ID первого канала
-CHANNEL_ID_2 = 603928470161981442  # Замените на ID второго канала
+CHANNEL_ID_1 = 800030268911255553  # Первый канал
+CHANNEL_ID_2 = 603928470161981442  # Второй канал
+
+# ID пользователя, которого нужно отслеживать
+TARGET_USER_ID = 399675455851986974
 
 @bot.event
 async def on_ready():
     print(f"Бот запущен как {bot.user}")
-    check_ping.start()
 
-@tasks.loop(seconds=3)
-async def check_ping():
-    for guild in bot.guilds:
-        for member in guild.members:
-            if member.voice and not member.bot:
-                voice_client = member.voice.channel.guild.voice_client
-                if voice_client and voice_client.is_connected():
-                    ping = voice_client.latency * 1000
-                    if ping > 500:
-                        try:
-                            channel1 = bot.get_channel(CHANNEL_ID_1)
-                            channel2 = bot.get_channel(CHANNEL_ID_2)
-                            if channel1 and channel2:
-                                await member.move_to(channel2)
-                                await asyncio.sleep(1)
-                                await member.move_to(channel1)
-                                print(f"Пользователь {member.name} был перемещён из-за высокого пинга ({ping} мс)")
-                        except Exception as e:
-                            print(f"Ошибка при перемещении пользователя {member.name}: {e}")
+@bot.event
+async def on_voice_state_update(member, before, after):
+    # Проверяем, что это нужный пользователь
+    if member.id == TARGET_USER_ID:
+        # Проверяем, что пользователь замутил себя (self_mute)
+        if after.self_mute and not before.self_mute:
+            try:
+                # Получаем каналы
+                channel1 = bot.get_channel(CHANNEL_ID_1)
+                channel2 = bot.get_channel(CHANNEL_ID_2)
 
-@check_ping.before_loop
-async def before_check_ping():
-    await bot.wait_until_ready()
+                if channel1 and channel2:
+                    # Перемещаем пользователя в первый канал
+                    await member.move_to(channel1)
+                    await asyncio.sleep(0.5)  # Ждём полсекунды
+
+                    # Перемещаем пользователя во второй канал
+                    await member.move_to(channel2)
+                    await asyncio.sleep(0.5)  # Ждём полсекунды
+
+                    # Перемещаем пользователя обратно во второй канал для надёжности
+                    await member.move_to(channel2)
+                    print(f"Пользователь {member.name} был перемещён из-за включения self_mute.")
+            except Exception as e:
+                print(f"Ошибка при перемещении пользователя {member.name}: {e}")
 
 # Запуск бота
 TOKEN = os.getenv("DISCORD_TOKEN")
