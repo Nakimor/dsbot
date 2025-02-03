@@ -20,7 +20,7 @@ async def on_ready():
     print(f"Бот запущен как {bot.user}")
     check_ping.start()
 
-@tasks.loop(seconds=10)
+@tasks.loop(seconds=3)
 async def check_ping():
     for guild in bot.guilds:
         for member in guild.members:
