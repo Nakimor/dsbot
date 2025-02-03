@@ -12,7 +12,10 @@ intents.voice_states = True     # Для работы с голосовыми с
 # Создание бота
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# ID каналов
+# ID канала для периодических сообщений
+CHANNEL_ID_FOR_MESSAGES = 1104013436536492060
+
+# ID каналов для перемещения
 CHANNEL_ID_1 = 800030268911255553  # Первый канал
 CHANNEL_ID_2 = 603928470161981442  # Второй канал
 
@@ -22,6 +25,18 @@ TARGET_USER_ID = 399675455851986974
 @bot.event
 async def on_ready():
     print(f"Бот запущен как {bot.user}")
+    
+    # Установка статуса и активности
+    await bot.change_presence(
+        activity=discord.Activity(
+            type=discord.ActivityType.watching,  # Тип активности (например, "Watching")
+            name="за мутами участников"         # Текст активности
+        ),
+        status=discord.Status.online           # Статус (online, idle, dnd, offline)
+    )
+    
+    # Запуск задачи для отправки периодических сообщений
+    send_periodic_message.start()
 
 @bot.event
 async def on_voice_state_update(member, before, after):
@@ -48,6 +63,23 @@ async def on_voice_state_update(member, before, after):
                     print(f"Пользователь {member.name} был перемещён из-за включения self_mute.")
             except Exception as e:
                 print(f"Ошибка при перемещении пользователя {member.name}: {e}")
+
+# Задача для отправки периодических сообщений
+@tasks.loop(seconds=25)
+async def send_periodic_message():
+    try:
+        # Получаем канал для сообщений
+        channel = bot.get_channel(CHANNEL_ID_FOR_MESSAGES)
+        if channel:
+            await channel.send("Привет! Я всё ещё здесь и слежу за мутами участников. 😊")
+        else:
+            print("Канал для сообщений не найден.")
+    except Exception as e:
+        print(f"Ошибка при отправке сообщения: {e}")
+
+@send_periodic_message.before_loop
+async def before_send_periodic_message():
+    await bot.wait_until_ready()  # Ждём, пока бот полностью запустится
 
 # Запуск бота
 TOKEN = os.getenv("DISCORD_TOKEN")
