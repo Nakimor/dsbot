@@ -5,9 +5,9 @@ import asyncio
 
 # Настройка интентов
 intents = discord.Intents.default()
-intents.message_content = True  # Для работы с содержимым сообщений
-intents.members = True          # Для работы с участниками сервера
-intents.voice_states = True     # Для работы с голосовыми состояниями
+intents.message_content = True
+intents.members = True
+intents.voice_states = True
 
 # Создание бота
 bot = commands.Bot(command_prefix="!", intents=intents)
@@ -29,10 +29,10 @@ async def on_ready():
     # Установка статуса и активности
     await bot.change_presence(
         activity=discord.Activity(
-            type=discord.ActivityType.watching,  # Тип активности (например, "Watching")
-            name="за мутом"         # Текст активности
+            type=discord.ActivityType.watching,
+            name="за мутами участников"
         ),
-        status=discord.Status.online           # Статус (online, idle, dnd, offline)
+        status=discord.Status.online
     )
     
     # Запуск задачи для отправки периодических сообщений
@@ -40,35 +40,25 @@ async def on_ready():
 
 @bot.event
 async def on_voice_state_update(member, before, after):
-    # Проверяем, что это нужный пользователь
     if member.id == TARGET_USER_ID:
-        # Проверяем, что пользователь замутил себя (self_mute)
         if after.self_mute and not before.self_mute:
             try:
-                # Получаем каналы
                 channel1 = bot.get_channel(CHANNEL_ID_1)
                 channel2 = bot.get_channel(CHANNEL_ID_2)
 
                 if channel1 and channel2:
-                    # Перемещаем пользователя в первый канал
                     await member.move_to(channel1)
-                    await asyncio.sleep(0.5)  # Ждём полсекунды
-
-                    # Перемещаем пользователя во второй канал
+                    await asyncio.sleep(0.5)
                     await member.move_to(channel2)
-                    await asyncio.sleep(0.5)  # Ждём полсекунды
-
-                    # Перемещаем пользователя обратно во второй канал для надёжности
+                    await asyncio.sleep(0.5)
                     await member.move_to(channel2)
                     print(f"Пользователь {member.name} был перемещён из-за включения self_mute.")
             except Exception as e:
                 print(f"Ошибка при перемещении пользователя {member.name}: {e}")
 
-# Задача для отправки периодических сообщений
 @tasks.loop(seconds=25)
 async def send_periodic_message():
     try:
-        # Получаем канал для сообщений
         channel = bot.get_channel(CHANNEL_ID_FOR_MESSAGES)
         if channel:
             await channel.send("Привет! Я всё ещё здесь и слежу за мутами участников. 😊")
@@ -79,7 +69,7 @@ async def send_periodic_message():
 
 @send_periodic_message.before_loop
 async def before_send_periodic_message():
-    await bot.wait_until_ready()  # Ждём, пока бот полностью запустится
+    await bot.wait_until_ready()
 
 # Запуск бота
 TOKEN = os.getenv("DISCORD_TOKEN")
