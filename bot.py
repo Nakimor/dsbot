@@ -5,8 +5,9 @@ import asyncio
 
 # Настройка интентов
 intents = discord.Intents.default()
-intents.members = True
-intents.voice_states = True
+intents.message_content = True  # Для работы с содержимым сообщений
+intents.members = True          # Для работы с участниками сервера
+intents.voice_states = True     # Для работы с голосовыми состояниями
 
 # Создание бота
 bot = commands.Bot(command_prefix="!", intents=intents)
